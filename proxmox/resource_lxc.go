@@ -422,6 +422,11 @@ func resourceLxc() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"destnode": {
+				Type: schema.TypeString,
+				Optional: true,
+				
+			},
 			"vmid": {
 				Type:             schema.TypeInt,
 				Optional:         true,
@@ -489,6 +494,7 @@ func resourceLxcCreate(d *schema.ResourceData, meta interface{}) error {
 	config.Template = d.Get("template").(bool)
 	config.Tty = d.Get("tty").(int)
 	config.Unique = d.Get("unique").(bool)
+	config.DestNode = d.Get("destnode").(string)
 	config.Unprivileged = d.Get("unprivileged").(bool)
 
 	targetNode := d.Get("target_node").(string)
