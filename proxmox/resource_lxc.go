@@ -755,7 +755,7 @@ func resourceLxcUpdate(d *schema.ResourceData, meta interface{}) error {
 		newnode := ""
 		if d.HasChange("destnode") && d.Get("destnode").(string) != "" {
 			newnode = d.Get("destnode").(string)
-		} else if d.HasChange("target_node") && d.Get("destnode").(string) != d.Get("target_node").(string)
+		} else if d.HasChange("target_node") && d.Get("destnode").(string) != d.Get("target_node").(string) {
 			newnode = d.Get("target_node").(string)
 		}
 		_, err := client.MigrateNode(vmr, newnode, true)
