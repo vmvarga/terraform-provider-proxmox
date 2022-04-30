@@ -425,7 +425,7 @@ func resourceLxc() *schema.Resource {
 			"destnode": {
 				Type: schema.TypeString,
 				Optional: true,
-				
+
 			},
 			"vmid": {
 				Type:             schema.TypeInt,
@@ -496,7 +496,7 @@ func resourceLxcCreate(d *schema.ResourceData, meta interface{}) error {
 	config.Unique = d.Get("unique").(bool)
 	config.DestNode = d.Get("destnode").(string)
 	config.Unprivileged = d.Get("unprivileged").(bool)
-	
+
 	destNode := d.Get("destnode").(string)
 	targetNode := d.Get("target_node").(string)
 
@@ -545,11 +545,12 @@ func resourceLxcCreate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
+
 		if destNode != "" && targetNode != destNode {
-                	vmr.SetNode(destNode)
+      vmr.SetNode(destNode)
 			targetNode = destNode
 		}
-		//d.Set("target_node", destNode)                                                                                    
+
 		// Waiting for the clone to become ready and
 		// read back all the current disk configurations from proxmox
 		// this allows us to receive updates on the post-clone state of the container we're building
@@ -584,13 +585,13 @@ func resourceLxcCreate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		
+
 		// Update all remaining stuff
 		err = config.UpdateConfig(vmr, client)
 		if err != nil {
 			return err
 		}
-		
+
 		//Start LXC if start parameter is set to true
 		if d.Get("start").(bool) {
 	  		log.Print("[DEBUG][LxcCreate] starting LXC")
@@ -729,7 +730,7 @@ func resourceLxcUpdate(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
-	
+
 	if d.HasChange("start") {
 		vmState, err := client.GetVmState(vmr)
 		if err == nil && vmState["status"] == "stopped" && d.Get("start").(bool) {
@@ -749,6 +750,20 @@ func resourceLxcUpdate(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
+
+	if d.HasChange("destnode") || d.HasChange("target_node") {
+		newnode := ""
+		if d.HasChange("destnode") && d.Get("destnode").(string) != "" {
+			newnode = d.Get("destnode").(string)
+		} else if d.HasChange("target_node") && d.Get("destnode").(string) != d.Get("target_node").(string)
+			newnode = d.Get("target_node").(string)
+		}
+		_, err := client.MigrateNode(vmr, newnode, true)
+		if err != nil {
+			return err
+		}
+		vmr.SetNode(newnode)
+  }
 
 	lock.unlock()
 	return resourceLxcRead(d, meta)
