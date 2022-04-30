@@ -496,7 +496,8 @@ func resourceLxcCreate(d *schema.ResourceData, meta interface{}) error {
 	config.Unique = d.Get("unique").(bool)
 	config.DestNode = d.Get("destnode").(string)
 	config.Unprivileged = d.Get("unprivileged").(bool)
-
+	
+	destNode := d.Get("destnode").(string)
 	targetNode := d.Get("target_node").(string)
 
 	// proxmox api allows multiple network sets,
@@ -544,7 +545,11 @@ func resourceLxcCreate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-
+		if destNode != "" && targetNode != destNode {
+                	vmr.SetNode(destNode)
+			targetNode = destNode
+		}
+		//d.Set("target_node", destNode)                                                                                    
 		// Waiting for the clone to become ready and
 		// read back all the current disk configurations from proxmox
 		// this allows us to receive updates on the post-clone state of the container we're building
