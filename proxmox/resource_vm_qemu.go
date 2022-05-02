@@ -1049,12 +1049,18 @@ func resourceVmQemuUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Partial(true)
-	if d.HasChange("target_node") {
-		_, err := client.MigrateNode(vmr, d.Get("target_node").(string), true)
+	if d.HasChange("destnode") || d.HasChange("target_node") {
+		newnode := ""
+		if d.HasChange("destnode") && d.Get("destnode").(string) != "" {
+			newnode = d.Get("destnode").(string)
+		} else if d.HasChange("target_node") && d.Get("destnode").(string) != d.Get("target_node").(string) {
+			newnode = d.Get("target_node").(string)
+		}
+		_, err := client.MigrateNode(vmr, newnode, true)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		vmr.SetNode(d.Get("target_node").(string))
+		vmr.SetNode(newnode)
 	}
 	d.Partial(false)
 
