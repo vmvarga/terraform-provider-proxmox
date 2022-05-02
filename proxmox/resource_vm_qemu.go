@@ -62,6 +62,11 @@ func resourceVmQemu() *schema.Resource {
 				Required:    true,
 				Description: "The node where VM goes to",
 			},
+			"destnode": {
+				Type: schema.TypeString,
+				Optional: true,
+
+			},
 			"bios": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -762,6 +767,7 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 		QemuOs:       d.Get("qemu_os").(string),
 		Tags:         d.Get("tags").(string),
 		Args:         d.Get("args").(string),
+		DestNode:     d.Get("destnode").(string),
 		QemuNetworks: qemuNetworks,
 		QemuDisks:    qemuDisks,
 		QemuSerials:  qemuSerials,
@@ -795,6 +801,7 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 	dupVmr, _ := client.GetVmRefByName(vmName)
 
 	forceCreate := d.Get("force_create").(bool)
+	destNode := d.Get("destnode").(string)
 	targetNode := d.Get("target_node").(string)
 	pool := d.Get("pool").(string)
 
@@ -850,6 +857,12 @@ func resourceVmQemuCreate(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				return err
 			}
+
+			if destNode != "" && targetNode != destNode {
+	      vmr.SetNode(destNode)
+				targetNode = destNode
+			}
+
 			time.Sleep(30 * time.Second)
 
 			config_post_clone, err := pxapi.NewConfigQemuFromApi(vmr, client)
